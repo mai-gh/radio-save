@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
 
-# Intergalactic FM: Cybernetic Broadcasting System
-#stream_url = 'http://radio.intergalactic.fm:80/1'
-
-# Intergalactic FM: Disco Fetish
-stream_url = 'http://radio.intergalactic.fm:80/2'
-
-# Intergalactic FM: Dream Machine
-#stream_url = 'http://radio.intergalactic.fm:80/3'
-
-# XWave Radio
-#stream_url = 'http://ns319459.ip-91-121-67.eu:8000'
-
-
-
 from requests import get
 from time import time
-
-
+from sys import argv
 #import code
 #code.interact(local=locals())
-#import sys
-#stream_url = sys.argv[1]
+
+
+if len(argv) > 1:
+    if argv[1] == 'xwave':
+        stream_url = 'http://ns319459.ip-91-121-67.eu:8000'
+    elif argv[1] == 'ifm1':
+        stream_url = 'http://radio.intergalactic.fm:80/1'
+    elif argv[1] == 'ifm2':
+        stream_url = 'http://radio.intergalactic.fm:80/2'
+    elif argv[1] == 'ifm3':
+        stream_url = 'http://radio.intergalactic.fm:80/3'
+    elif (argv[1].split(':')[0] == 'http') or (argv[1].split(':')[0] == 'https'):
+        stream_url = argv[1]
+    else:
+        print('invalid stream:', argv[1])
+        exit()
+else:
+    print('must provide a stream as the only argument')
+    exit()
 
 
 def rip():
