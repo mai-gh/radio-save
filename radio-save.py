@@ -27,8 +27,14 @@ else:
 
 
 def rip():
-    r = get(stream_url, headers={'Icy-MetaData': '1'}, stream=True)
-    
+    r = ''
+
+    while not r:
+        try:
+            r = get(stream_url, headers={'Icy-MetaData': '1'}, stream=True)
+        except:
+            print('there was a problem connecting to the stream')
+            
     metaint = int(r.headers['icy-metaint'])
     byte_counter = 0
     stream_buffer = bytearray()
