@@ -58,6 +58,8 @@ def rip():
                 with open(mp3_file_name, 'ab') as f:
                     f.write(stream_buffer)
                 stream_buffer = bytearray()
+                with open("logfile.txt", "a") as logf:
+                    logf.write(mp3_file_name + '\n')
             for meta_chunk in r.iter_content(chunk_size=metalen):
                 stream_title = meta_chunk.decode().split("StreamTitle='")[1].rsplit("';")[0]
                 title_change_time = str(int(time()))
