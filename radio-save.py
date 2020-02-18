@@ -3,9 +3,6 @@
 from requests import get
 from time import time
 from sys import argv
-#import code
-#code.interact(local=locals())
-
 
 if len(argv) > 1:
     if argv[1] == 'xwave':
@@ -25,10 +22,8 @@ else:
     print('must provide a stream as the only argument')
     exit()
 
-
 def rip():
     r = ''
-
     while not r:
         try:
             r = get(stream_url, headers={'Icy-MetaData': '1'}, stream=True)
@@ -36,55 +31,40 @@ def rip():
             print('there was a problem connecting to the stream')
             
     metaint = int(r.headers['icy-metaint'])
-    byte_counter = 0
+    bitrate = int(r.headers['icy-br'].split(', ')[0])
     stream_buffer = bytearray()
-    metadata_buffer = bytearray()
-    meta_start_pos = metaint + 1
-    stream_title = ''
-    file_size = 0
     extension = 'mp3'
-    file_name = ''
+    mp3_file_name = ''
+    sec_save_interval = 15
+    bytes_per_second = (bitrate * 1024) / 8
+    mp3_write_chunk_size = bytes_per_second * sec_save_interval
 
-    play_time = str(int(time()))
-    
     for key, value in r.headers.items():
          print(key, ':', value)
     
-    for byte in r.iter_content(1):
-        byte_counter += 1
-        if byte_counter <= metaint:
-            stream_buffer.extend(byte)
-        elif byte_counter == meta_start_pos:
-            if stream_title:
-                file_size += byte_counter
-                file_name = play_time + ' ' + stream_title + '.' + extension
-                file_name = file_name.replace('/', '\u2215').replace('\0', '')
-                print('\r', "Saving File:", file_name, file_size, end='')
-                f = open(file_name, 'ab')
-                f.write(stream_buffer)
-                f.close()
+    while True:
+        for mp3_chunk in r.iter_content(chunk_size=metaint):
+            stream_buffer.extend(mp3_chunk)
+            break
+        for metalen_byte in r.iter_content(chunk_size=1):
+            metalen = int.from_bytes(metalen_byte, 'little') * 16
+            break
+        if mp3_file_name and (len(stream_buffer) >= mp3_write_chunk_size):
+                with open(mp3_file_name, 'ab') as f:
+                    f.write(stream_buffer)
                 stream_buffer = bytearray()
-            byte_int = int.from_bytes(byte, 'little')
-            metalen = byte_int * 16
-            meta_end_pos = meta_start_pos + metalen
-            if metalen == 0:
-                byte_counter = 0
-        elif byte_counter < meta_end_pos:
-            metadata_buffer.extend(byte)
-        elif byte_counter == meta_end_pos:
-            metadata_buffer.extend(byte)
-            if file_name:
-                logf = open("logfile.txt", "a")
-                logf.write(file_name + '\n')
-                logf.close()
-            stream_title = metadata_buffer.decode().split("StreamTitle='")[1].rsplit("';")[0]
-            play_time = str(int(time()))
-            print()
-            #print("Now Playing:", stream_title)
-            metadata_buffer = bytearray()
-            byte_counter = 0
-            file_size = 0
-
+        if metalen > 0:
+            if mp3_file_name:
+                with open(mp3_file_name, 'ab') as f:
+                    f.write(stream_buffer)
+                stream_buffer = bytearray()
+            for meta_chunk in r.iter_content(chunk_size=metalen):
+                stream_title = meta_chunk.decode().split("StreamTitle='")[1].rsplit("';")[0]
+                title_change_time = str(int(time()))
+                mp3_file_name = title_change_time + ' ' + stream_title + '.' + extension
+                mp3_file_name = mp3_file_name.replace('/', '\u2215').replace('\0', '')
+                print(mp3_file_name)
+                break
 
 if __name__ == '__main__':
     while True:
