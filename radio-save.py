@@ -70,5 +70,8 @@ def rip():
 
 if __name__ == '__main__':
     while True:
-        rip()
+        try:
+            rip()
+        except:
+            pass
 
