@@ -3,6 +3,7 @@
 from requests import get
 from time import time
 from sys import argv
+from datetime import datetime
 
 if len(argv) > 1:
     if argv[1] == 'xwave':
@@ -26,13 +27,14 @@ def rip():
     r = ''
     while not r:
         try:
-            r = get(stream_url, headers={'Icy-MetaData': '1'}, stream=True)
+            r = get(stream_url, headers={'Icy-MetaData': '1'}, stream=True, timeout=10)
         except:
             print('there was a problem connecting to the stream')
             
     metaint = int(r.headers['icy-metaint'])
     bitrate = int(r.headers['icy-br'].split(', ')[0])
     stream_buffer = bytearray()
+    stream_byte_counter = 0
     extension = 'mp3'
     mp3_file_name = ''
     sec_save_interval = 15
@@ -45,6 +47,9 @@ def rip():
     while True:
         for mp3_chunk in r.iter_content(chunk_size=metaint):
             stream_buffer.extend(mp3_chunk)
+            stream_byte_counter += metaint
+            time_now = str(datetime.now()).split('.')[0]
+            print("  ", time_now, mp3_file_name[0:128], stream_byte_counter, int(stream_byte_counter / bytes_per_second),end='\r')
             break
         for metalen_byte in r.iter_content(chunk_size=1):
             metalen = int.from_bytes(metalen_byte, 'little') * 16
@@ -65,13 +70,17 @@ def rip():
                 title_change_time = str(int(time()))
                 mp3_file_name = title_change_time + ' ' + stream_title + '.' + extension
                 mp3_file_name = mp3_file_name.replace('/', '\u2215').replace('\0', '')
-                print(mp3_file_name)
+                print()
+                stream_byte_counter = 0
                 break
 
 if __name__ == '__main__':
     while True:
         try:
             rip()
+        except KeyboardInterrupt:
+            print()
+            exit()
         except:
             pass
 
