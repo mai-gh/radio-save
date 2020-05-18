@@ -41,9 +41,16 @@ def rip():
     bytes_per_second = (bitrate * 1024) / 8
     mp3_write_chunk_size = bytes_per_second * sec_save_interval
 
+    all_current_headers = ''
     for key, value in r.headers.items():
-         print(key, ':', value)
-    
+         this_header_string = key + ' : ' + value
+         all_current_headers += this_header_string + '\n'
+
+    header_file_name = str(int(time())) + ' ' + 'headers' + '.' + 'txt'
+    with open(header_file_name, "w") as headerf:
+         headerf.write(all_current_headers)
+    print(all_current_headers)
+
     while True:
         for mp3_chunk in r.iter_content(chunk_size=metaint):
             stream_buffer.extend(mp3_chunk)
@@ -82,5 +89,6 @@ if __name__ == '__main__':
             print()
             exit()
         except:
+            print("error with rip()")
             pass
 
