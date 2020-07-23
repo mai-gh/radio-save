@@ -65,7 +65,7 @@ def rip():
             pstr += " "
             pstr += str(stream_byte_counter) # assume this is 10 chars
             pstr += " "
-            pstr += str(stream_byte_counter / bytes_per_second) # 4chars
+            pstr += str(int(stream_byte_counter / bytes_per_second)) # 4chars
             print(pstr, end='\r')
             break
         for metalen_byte in r.iter_content(chunk_size=1):
