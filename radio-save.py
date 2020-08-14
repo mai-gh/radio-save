@@ -4,6 +4,7 @@ from requests import get
 from time import time
 from sys import argv
 from datetime import datetime
+from os import popen
 
 if len(argv) > 1:
     if argv[1] == 'xwave':
@@ -56,7 +57,16 @@ def rip():
             stream_buffer.extend(mp3_chunk)
             stream_byte_counter += metaint
             time_now = str(datetime.now()).split('.')[0]
-            print("  ", time_now, mp3_file_name[0:128], stream_byte_counter, int(stream_byte_counter / bytes_per_second),end='\r')
+            columns = int(popen('stty size', 'r').read().split()[1])
+            name_size = columns - 19 - 10 - 4
+            pstr = time_now # 19 chars
+            pstr += " "
+            pstr += mp3_file_name[0:name_size]
+            pstr += " "
+            pstr += str(stream_byte_counter) # assume this is 10 chars
+            pstr += " "
+            pstr += str(stream_byte_counter / bytes_per_second) # 4chars
+            print(pstr, end='\r')
             break
         for metalen_byte in r.iter_content(chunk_size=1):
             metalen = int.from_bytes(metalen_byte, 'little') * 16
@@ -80,7 +90,7 @@ def rip():
                 print()
                 stream_byte_counter = 0
                 break
-
+#rip()
 if __name__ == '__main__':
     while True:
         try:
